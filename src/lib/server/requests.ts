@@ -8,3 +8,13 @@ export const postNoBodyOptions = {
     method: 'POST',
     headers: {Authorization: `Bearer ${API_KEY}`},
 }
+export function postOptions(body: Object) {
+    return {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    }
+}

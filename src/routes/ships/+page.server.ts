@@ -1,4 +1,4 @@
-import { baseUrl, getOptions } from "$lib/server/requests"
+import { baseUrl, getOptions, postOptions } from "$lib/server/requests"
 import type { Actions, PageServerLoad } from "./$types"
 
 export const load = (async ({ fetch }) => {
@@ -9,21 +9,43 @@ export const load = (async ({ fetch }) => {
 
 export const actions = {
   findShipyard: async ({ request }) => {
-    const data = await request.formData()
-    const systemSymbol = data.get('systemSymbol')
+    const formData = await request.formData()
+    const systemSymbol = formData.get('systemSymbol')
     const res = await fetch(`${baseUrl}/systems/${systemSymbol}/waypoints`, getOptions)
     if (!res.ok) {
       throw new Error(`Error getting waypoints: ${await res.text()}`)
     }
-    return res.json()
+    const { data } = await res.json()
+    return { shipyards: data }
   },
   searchShips: async ({ request }) => {
-    const data = await request.formData()
-    const systemSymbol = data.get('systemSymbol')
-    const waypointSymbol = data.get('waypointSymbol')
+    const formData = await request.formData()
+    const waypointSymbol = formData.get('waypointSymbol') as string
+    const systemSymbol = waypointSymbol?.substring(0, 7)
     const res = await fetch(`${baseUrl}/systems/${systemSymbol}/waypoints/${waypointSymbol}/shipyard`, getOptions)
     if (!res.ok) {
       throw new Error(`Error getting available ships: ${await res.text()}`)
+    }
+    const { data } = await res.json()
+    return { ships: data }
+  },
+  buyShip: async ({ request }) => {
+    const data = await request.formData()
+    const shipType = data.get('shipType') as string
+    const waypointSymbol = data.get('waypointSymbol') as string
+    const reqBody = {
+      "shipType": shipType,
+      "waypointSymbol": waypointSymbol,
+    }
+    console.log(reqBody)
+    try {
+      const res = await fetch(`${baseUrl}/my/ships`, postOptions(reqBody))
+      if (!res.ok) {
+        throw new Error(`Error buying ship: ${await res.text()}`)
+      }
+      return { message: `Purchased ship ${shipType} from waypoint ${waypointSymbol}`}
+    } catch (error: any) {
+      return { message: error.message }
     }
   }
 } satisfies Actions;
