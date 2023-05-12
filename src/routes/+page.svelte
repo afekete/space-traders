@@ -8,7 +8,7 @@
   <form method="post" action="?/acceptContract">
     <article>
       <header>{contract.type}</header>
-      <pre>{JSON.stringify(contract.terms, null, 2)}</pre>
+      <pre>{JSON.stringify({ id: contract.id, terms: contract.terms}, null, 2)}</pre>
       <input type="hidden" value={contract.id} name="contractId" />
       <footer>
         {#if contract.accepted === true}

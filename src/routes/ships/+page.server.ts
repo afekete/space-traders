@@ -1,4 +1,5 @@
 import { baseUrl, getOptions, postOptions } from "$lib/server/requests"
+import { getSystemFromWaypoint } from "$lib/server/utils"
 import type { Actions, PageServerLoad } from "./$types"
 
 export const load = (async ({ fetch }) => {
@@ -21,7 +22,7 @@ export const actions = {
   searchShips: async ({ request }) => {
     const formData = await request.formData()
     const waypointSymbol = formData.get('waypointSymbol') as string
-    const systemSymbol = waypointSymbol?.substring(0, 7)
+    const systemSymbol = getSystemFromWaypoint(waypointSymbol)
     const res = await fetch(`${baseUrl}/systems/${systemSymbol}/waypoints/${waypointSymbol}/shipyard`, getOptions)
     if (!res.ok) {
       throw new Error(`Error getting available ships: ${await res.text()}`)
@@ -37,7 +38,6 @@ export const actions = {
       "shipType": shipType,
       "waypointSymbol": waypointSymbol,
     }
-    console.log(reqBody)
     try {
       const res = await fetch(`${baseUrl}/my/ships`, postOptions(reqBody))
       if (!res.ok) {

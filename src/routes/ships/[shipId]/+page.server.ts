@@ -1,5 +1,5 @@
-import { baseUrl, getOptions, postOptions } from "$lib/server/requests"
-import type { PageServerLoad } from "./$types"
+import { actionRequestinator, baseUrl, dataRequestinator, getOptions, postNoBodyOptions, postOptions } from "$lib/server/requests"
+import type { Actions, PageServerLoad } from "./$types"
 
 export const load = (async ({ fetch, params }) => {
   const shipId = params.shipId
@@ -27,4 +27,47 @@ export const actions = {
       return { action: 'navigateShip', message: error.message }
     }
   },
-}
+  shipActions: async ({ request }) => {
+    const formData = await request.formData()
+    const action = formData.get('shipAction') as string
+    const shipSymbol = formData.get('shipSymbol') as string
+    return actionRequestinator(
+      `/my/ships/${shipSymbol}/${action}`,
+      postNoBodyOptions,
+      action,
+      `Ship ${action}ed or ${action}ing`
+    )
+  },
+  sellItem: async ({ request }) => {
+    const formData = await request.formData()
+    const shipSymbol = formData.get('shipSymbol') as string
+    const itemSymbol = formData.get('itemSymbol') as string
+    const itemAmount = formData.get('itemAmount') as string
+    const options = postOptions({
+      symbol: itemSymbol,
+      units: itemAmount,
+    })
+    return dataRequestinator(
+      `/my/ships/${shipSymbol}/sell`,
+      options,
+      'sellItem',
+    )
+  },
+  deliverItem: async ({ request }) => {
+    const formData = await request.formData()
+    const shipSymbol = formData.get('shipSymbol') as string
+    const itemSymbol = formData.get('itemSymbol') as string
+    const itemAmount = formData.get('itemAmount') as string
+    const contractId = formData.get('contractId') as string
+    const options = postOptions({
+      shipSymbol: shipSymbol,
+      tradeSymbol: itemSymbol,
+      units: itemAmount,
+    })
+    return dataRequestinator(
+      `/my/contracts/${contractId}/deliver`,
+      options,
+      'deliverItem',
+    )
+  }
+} satisfies Actions
